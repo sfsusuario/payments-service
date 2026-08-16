@@ -113,9 +113,11 @@ fi
 ok "Usando Python: $($PYTHON_BIN --version)  ($(command -v "$PYTHON_BIN"))"
 
 # ── Paquetes del sistema ──────────────────────────────────────────────────────
-log "Instalando paquetes del sistema (build tools, git, nginx)"
+# Nota: NO se instala servidor web aquí — usa el que ya tenga el servidor
+# (Apache: deploy/apache.conf.example · nginx: deploy/nginx.conf.example).
+log "Instalando paquetes del sistema (build tools, git)"
 apt update
-apt install -y build-essential pkg-config git nginx
+apt install -y build-essential pkg-config git
 
 # Asegurar venv y dev para la versión elegida
 if [[ "$PYTHON_BIN" == "python3.11" ]]; then
@@ -197,11 +199,12 @@ cat <<EOF
 
   Próximos pasos recomendados:
     1. Editar .env: SECRET_KEY (genérala con: openssl rand -hex 32).
-    2. Configurar nginx:  ver deploy/nginx.conf.example
-    3. Habilitar HTTPS:   certbot --nginx -d api.pagos.fierro.dev
-    4. Entrar al panel:   https://api.pagos.fierro.dev/admin (admin / 1234 — cámbiala al entrar)
-       y configurar las llaves Wompi + URLs de webhook de las apps.
-    5. Registrar la URL de eventos en Wompi (sandbox y producción):
+    2. Configurar el servidor web:
+         Apache: ver deploy/apache.conf.example  (certbot --apache -d api.pagos.fierro.dev)
+         nginx:  ver deploy/nginx.conf.example   (certbot --nginx  -d api.pagos.fierro.dev)
+    3. Entrar al panel:   https://api.pagos.fierro.dev/admin (admin / 1234 — cámbiala al entrar)
+       y configurar las cuentas Wompi + apps.
+    4. Registrar la URL de eventos en Wompi (sandbox y producción):
        https://api.pagos.fierro.dev/wompi/webhook
 
 EOF

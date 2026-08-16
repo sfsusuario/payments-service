@@ -22,7 +22,7 @@ from routers import admin, api, webhook
 DEFAULT_ADMIN_USER = "admin"
 DEFAULT_ADMIN_PASSWORD = "1234"
 
-DEFAULT_TARGET_BUILDER = "https://api.builder.fierro.dev/api/payments/wompi/webhook"
+DEFAULT_TARGET_BUILDER = "https://api.builder.fierro.dev/payments/wompi/webhook"
 DEFAULT_TARGET_SASTRERIA = "https://api.sastreria.fierro.dev/payments/wompi/webhook"
 
 

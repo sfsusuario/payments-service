@@ -1,0 +1,27 @@
+# Apache — api.pagos.fierro.dev (payments-service: proxy a gunicorn en 127.0.0.1:8010)
+#
+# Instalación (Ubuntu/Debian):
+#   sudo a2enmod proxy proxy_http headers
+#   sudo cp apache.conf.example /etc/apache2/sites-available/api.pagos.fierro.dev.conf
+#   sudo a2ensite api.pagos.fierro.dev
+#   sudo apachectl configtest && sudo systemctl reload apache2
+#   sudo apt install -y certbot python3-certbot-apache
+#   sudo certbot --apache -d api.pagos.fierro.dev
+#   (certbot crea el VirtualHost :443 con SSL y la redirección automáticamente)
+
+<VirtualHost *:80>
+    ServerName api.pagos.fierro.dev
+
+    ProxyPreserveHost On
+    ProxyTimeout 30
+
+    # IP real del cliente: mod_proxy añade X-Forwarded-For solo (la auditoría la usa).
+    # Esquema real (http/https) para que FastAPI genere URLs correctas tras el proxy:
+    RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}
+
+    ProxyPass        / http://127.0.0.1:8010/
+    ProxyPassReverse / http://127.0.0.1:8010/
+
+    ErrorLog  ${APACHE_LOG_DIR}/api.pagos.error.log
+    CustomLog ${APACHE_LOG_DIR}/api.pagos.access.log combined
+</VirtualHost>

@@ -9,8 +9,8 @@ webhook, prefijo de referencia, cuenta asignada) se administran desde el panel
 Wompi (N cuentas) ──▶ api.pagos.fierro.dev/wompi/webhook   (este servicio)
                          │  1. la events key que verifica la firma identifica la cuenta
                          │  2. entre las apps de esa cuenta, enruta por prefijo:
-                         ├─ ref "WB-*"          ──▶ website-seller  (api.builder.fierro.dev)
-                         └─ sin prefijo (catch-all) ─▶ Sastreria-App (api.sastreria.fierro.dev)
+                         ├─ ref "WB-*"          ──▶ api.builder.fierro.dev/payments/wompi/webhook
+                         └─ sin prefijo (catch-all) ─▶ api.sastreria.fierro.dev/payments/wompi/webhook
 ```
 
 - El body del evento se reenvía **crudo** (bytes originales) con el header
@@ -86,8 +86,9 @@ bash serve.sh debug       # o en primer plano para depurar
 bash deploy.sh            # actualizar: git pull + deps + restart
 ```
 
-nginx: ver `deploy/nginx.conf.example` (proxy de `api.pagos.fierro.dev` → `:8010`),
-luego `sudo certbot --nginx -d api.pagos.fierro.dev`.
+Servidor web (proxy de `api.pagos.fierro.dev` → `:8010`):
+- **Apache**: `deploy/apache.conf.example`, luego `sudo certbot --apache -d api.pagos.fierro.dev`
+- **nginx**: `deploy/nginx.conf.example`, luego `sudo certbot --nginx -d api.pagos.fierro.dev`
 
 ## Puesta en marcha completa
 
