@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Panel — payments-service{% endblock %}
+
+{% macro key_input(name, label_text, value, uid) %}
+  <label for="{{ uid }}-{{ name }}">{{ label_text }}</label>
+  <div class="keyrow">
+    <input type="password" id="{{ uid }}-{{ name }}" name="{{ name }}" value="{{ value }}" autocomplete="off">
+    <button type="button" class="toggle">mostrar</button>
+  </div>
+{% endmacro %}
+
+{% block body %}
+<header>
+  <div style="display:flex; gap:24px; align-items:center;">
+    <h1>payments-service</h1>
+    <nav>
+      <a href="/admin" class="active">Configuración</a>
+      <a href="/admin/transactions">Transacciones</a>
+      <a href="/admin/audit">Auditoría</a>
+    </nav>
+  </div>
+  <div style="display:flex; gap:16px; align-items:center;">
+    <span style="color: var(--muted); font-size: 13px;">{{ username }}</span>
+    <form method="post" action="/admin/logout"><button class="link" type="submit">Salir</button></form>
+  </div>
+</header>
+<main>
+  {% if default_password %}
+  <div class="banner">
+    ⚠️ Sigues usando la contraseña por defecto (<strong>1234</strong>). Cámbiala abajo en
+    «Cambiar contraseña».
+  </div>
+  {% endif %}
+  {% if saved %}<p class="flash-ok">Cambios guardados.</p>{% endif %}
+  {% if error %}<p class="flash-err">{{ error }}</p>{% endif %}
+
+  <!-- ── Cuentas Wompi ─────────────────────────────────────────────────── -->
+  {% for account in accounts %}
+  <div class="card">
+    <form method="post" action="/admin/accounts/{{ account.id }}" id="account-form-{{ account.id }}">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Cuenta Wompi: {{ account.name }}</h2>
+        <span class="badge">{{ account.apps|length }} app(s)</span>
+      </div>
+      <label for="acc-name-{{ account.id }}">Nombre</label>
+      <input type="text" id="acc-name-{{ account.id }}" name="name" value="{{ account.name }}">
+      <div class="grid2">
+        <div>
+          <h2 style="margin-top:12px;">Sandbox</h2>
+          {{ key_input("sandbox_pub_key", "Public key", account.sandbox_pub_key, "acc" ~ account.id) }}
+          {{ key_input("sandbox_prv_key", "Private key", account.sandbox_prv_key, "acc" ~ account.id) }}
+          {{ key_input("sandbox_integrity_key", "Integrity key", account.sandbox_integrity_key, "acc" ~ account.id) }}
+          {{ key_input("sandbox_events_key", "Events key", account.sandbox_events_key, "acc" ~ account.id) }}
+        </div>
+        <div>
+          <h2 style="margin-top:12px;">Producción</h2>
+          {{ key_input("prod_pub_key", "Public key", account.prod_pub_key, "acc" ~ account.id) }}
+          {{ key_input("prod_prv_key", "Private key", account.prod_prv_key, "acc" ~ account.id) }}
+          {{ key_input("prod_integrity_key", "Integrity key", account.prod_integrity_key, "acc" ~ account.id) }}
+          {{ key_input("prod_events_key", "Events key", account.prod_events_key, "acc" ~ account.id) }}
+        </div>
+      </div>
+    </form>
+    <div style="display:flex; gap:10px;">
+      <button type="submit" form="account-form-{{ account.id }}">Guardar cuenta</button>
+      <form method="post" action="/admin/accounts/{{ account.id }}/delete"
+            onsubmit="return confirm('¿Eliminar la cuenta {{ account.name }}?');">
+        <button type="submit" style="background:#b42318;">Eliminar</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="card">
+    <h2>Nueva cuenta Wompi</h2>
+    <p class="hint">Crea la cuenta y luego edita sus llaves de sandbox/producción.</p>
+    <form method="post" action="/admin/accounts" style="display:flex; gap:10px; align-items:flex-end;">
+      <div style="flex:1;">
+        <label for="new-account-name">Nombre (ej. cuenta-2)</label>
+        <input type="text" id="new-account-name" name="name" required>
+      </div>
+      <button type="submit">Crear cuenta</button>
+    </form>
+  </div>
+
+  <!-- ── Apps ──────────────────────────────────────────────────────────── -->
+  {% for app in apps %}
+  <div class="card">
+    <form method="post" action="/admin/apps/{{ app.id }}" id="app-form-{{ app.id }}">
+      <h2>App: {{ app.name }}</h2>
+      <div class="grid2">
+        <div>
+          <label for="app-name-{{ app.id }}">Nombre</label>
+          <input type="text" id="app-name-{{ app.id }}" name="name" value="{{ app.name }}">
+        </div>
+        <div>
+          <label for="app-account-{{ app.id }}">Cuenta Wompi</label>
+          <select id="app-account-{{ app.id }}" name="wompi_account_id"
+                  style="width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:14px;">
+            <option value="">— sin cuenta —</option>
+            {% for account in accounts %}
+            <option value="{{ account.id }}" {% if app.wompi_account_id == account.id %}selected{% endif %}>{{ account.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="app-url-{{ app.id }}">URL de webhook (a donde se reenvían los eventos)</label>
+          <input type="text" id="app-url-{{ app.id }}" name="webhook_url" value="{{ app.webhook_url }}">
+        </div>
+        <div>
+          <label for="app-prefix-{{ app.id }}">Prefijo de referencia (vacío = catch-all)</label>
+          <input type="text" id="app-prefix-{{ app.id }}" name="reference_prefix" value="{{ app.reference_prefix }}" placeholder="WB-">
+        </div>
+      </div>
+      <label>API key (PAYMENTS_SERVICE_API_KEY en el .env de la app; X-Api-Key / X-Forward-Key)</label>
+      <div class="keyrow">
+        <input type="password" value="{{ app.api_key }}" readonly onclick="this.select()">
+        <button type="button" class="toggle">mostrar</button>
+      </div>
+    </form>
+    <div style="display:flex; gap:10px;">
+      <button type="submit" form="app-form-{{ app.id }}">Guardar app</button>
+      <form method="post" action="/admin/apps/{{ app.id }}/regenerate-key"
+            onsubmit="return confirm('¿Regenerar la key de {{ app.name }}? La app dejará de autenticar hasta actualizar su .env.');">
+        <button type="submit">Regenerar key</button>
+      </form>
+      <form method="post" action="/admin/apps/{{ app.id }}/delete"
+            onsubmit="return confirm('¿Eliminar la app {{ app.name }}?');">
+        <button type="submit" style="background:#b42318;">Eliminar</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="card">
+    <h2>Nueva app</h2>
+    <p class="hint">Se genera su API key automáticamente; luego configura URL de webhook, prefijo y cuenta.</p>
+    <form method="post" action="/admin/apps" style="display:flex; gap:10px; align-items:flex-end;">
+      <div style="flex:1;">
+        <label for="new-app-name">Nombre (ej. nueva-app)</label>
+        <input type="text" id="new-app-name" name="name" required>
+      </div>
+      <button type="submit">Crear app</button>
+    </form>
+  </div>
+
+  <!-- ── Contraseña ────────────────────────────────────────────────────── -->
+  <div class="card">
+    <h2>Cambiar contraseña</h2>
+    <form method="post" action="/admin/password">
+      <div class="grid2">
+        <div>
+          <label for="current_password">Contraseña actual</label>
+          <input type="password" id="current_password" name="current_password" autocomplete="current-password" required>
+        </div>
+        <div></div>
+        <div>
+          <label for="new_password">Nueva contraseña (mín. 6 caracteres)</label>
+          <input type="password" id="new_password" name="new_password" autocomplete="new-password" required>
+        </div>
+        <div>
+          <label for="confirm_password">Confirmar nueva contraseña</label>
+          <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
+        </div>
+      </div>
+      <button type="submit">Cambiar contraseña</button>
+    </form>
+  </div>
+
+  <!-- ── Eventos ───────────────────────────────────────────────────────── -->
+  <div class="card">
+    <h2>Últimos eventos ({{ events|length }})</h2>
+    {% if events %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha (UTC)</th><th>Evento</th><th>Referencia</th><th>Destino</th><th>HTTP</th><th>Resultado</th><th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in events %}
+          <tr>
+            <td>{{ e.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+            <td class="mono">{{ e.event_type or "—" }}</td>
+            <td class="mono">{{ e.reference or "—" }}</td>
+            <td>{{ e.target }}</td>
+            <td>{{ e.status_code if e.status_code is not none else "—" }}</td>
+            <td class="{{ 'ok' if e.ok else 'err' }}">{{ "ok" if e.ok else "error" }}</td>
+            <td>{{ e.detail }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="hint">Aún no se ha recibido ningún webhook.</p>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

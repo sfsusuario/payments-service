@@ -1,0 +1,22 @@
+# nginx — api.pagos.fierro.dev (payments-service: dispatcher Wompi + panel admin)
+#
+# Instalación:
+#   sudo cp nginx.conf.example /etc/nginx/sites-available/api.pagos.fierro.dev
+#   sudo ln -s /etc/nginx/sites-available/api.pagos.fierro.dev /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx
+#   sudo certbot --nginx -d api.pagos.fierro.dev
+#   (certbot reescribe este archivo para HTTPS)
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name api.pagos.fierro.dev;
+
+    location / {
+        proxy_pass http://127.0.0.1:8010;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

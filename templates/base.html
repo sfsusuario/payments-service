@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}payments-service{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #f4f5f7; --card: #ffffff; --text: #1c2430; --muted: #6b7686;
+      --accent: #175cd3; --accent-dark: #124ba8; --border: #dfe3e9;
+      --ok: #12805c; --err: #b42318; --warn-bg: #fff7e0; --warn-border: #f0c94d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px;
+    }
+    header {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 16px; margin: 0; }
+    header form { margin: 0; }
+    nav a { color: var(--muted); text-decoration: none; font-size: 14px; margin-right: 16px; }
+    nav a:hover { color: var(--text); }
+    nav a.active { color: var(--accent); font-weight: 600; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 12px; font-weight: 600; background: #eef1f5; color: var(--muted);
+    }
+    .badge.APPROVED { background: #e2f5ec; color: var(--ok); }
+    .badge.DECLINED, .badge.ERROR { background: #fbe9e7; color: var(--err); }
+    .badge.PENDING { background: var(--warn-bg); color: #8a6d1a; }
+    .badge.VOIDED { background: #ece9f7; color: #5b4ba6; }
+    .summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 4px; }
+    .summary .stat {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; color: var(--muted);
+    }
+    .summary .stat strong { display: block; font-size: 17px; color: var(--text); }
+    .filters { margin: 12px 0; font-size: 13px; }
+    .filters a { margin-right: 10px; }
+    main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 20px 24px; margin-bottom: 20px;
+    }
+    .card h2 { font-size: 15px; margin: 0 0 14px; }
+    .card p.hint { color: var(--muted); font-size: 13px; margin-top: 0; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+    input[type=text], input[type=password] {
+      width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 14px; font-family: ui-monospace, Consolas, monospace;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+    @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+    button {
+      background: var(--accent); color: #fff; border: 0; border-radius: 6px;
+      padding: 9px 18px; font-size: 14px; cursor: pointer; margin-top: 14px;
+    }
+    button:hover { background: var(--accent-dark); }
+    button.link { background: none; color: var(--muted); padding: 0; margin: 0; font-size: 13px; text-decoration: underline; }
+    button.link:hover { color: var(--text); background: none; }
+    .banner {
+      background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 8px;
+      padding: 10px 14px; margin-bottom: 20px; font-size: 14px;
+    }
+    .flash-ok { color: var(--ok); font-size: 14px; margin-bottom: 16px; }
+    .flash-err { color: var(--err); font-size: 14px; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; }
+    td.mono { font-family: ui-monospace, Consolas, monospace; }
+    .ok { color: var(--ok); font-weight: 600; }
+    .err { color: var(--err); font-weight: 600; }
+    .keyrow { position: relative; }
+    .keyrow .toggle {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: none; border: 0; color: var(--muted); cursor: pointer;
+      font-size: 12px; margin: 0; padding: 2px 4px;
+    }
+    .keyrow .toggle:hover { color: var(--text); background: none; }
+    .keyrow input { padding-right: 64px; }
+  </style>
+</head>
+<body>
+{% block body %}{% endblock %}
+<script>
+  document.querySelectorAll(".keyrow .toggle").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var input = btn.parentElement.querySelector("input");
+      var hidden = input.type === "password";
+      input.type = hidden ? "text" : "password";
+      btn.textContent = hidden ? "ocultar" : "mostrar";
+    });
+  });
+</script>
+</body>
+</html>

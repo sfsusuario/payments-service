@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Auditoría — payments-service{% endblock %}
+{% block body %}
+<header>
+  <div style="display:flex; gap:24px; align-items:center;">
+    <h1>payments-service</h1>
+    <nav>
+      <a href="/admin">Configuración</a>
+      <a href="/admin/transactions">Transacciones</a>
+      <a href="/admin/audit" class="active">Auditoría</a>
+    </nav>
+  </div>
+  <div style="display:flex; gap:16px; align-items:center;">
+    <span style="color: var(--muted); font-size: 13px;">{{ username }}</span>
+    <form method="post" action="/admin/logout"><button class="link" type="submit">Salir</button></form>
+  </div>
+</header>
+<main>
+  <div class="card">
+    <h2>Auditoría ({{ entries|length }} de {{ total }})</h2>
+    <p class="hint">
+      Cada cambio en cuentas, apps y credenciales, cada login y cada operación de
+      pago de la API, con hora (UTC) e IP de origen. Los valores de las llaves
+      nunca se registran — solo qué campos cambiaron.
+    </p>
+    <div class="filters">
+      <span style="color: var(--muted);">Actor:</span>
+      <a href="/admin/audit" {% if not actor_filter %}style="font-weight:600;"{% endif %}>todos</a>
+      <a href="/admin/audit?actor_type=admin" {% if actor_filter == "admin" %}style="font-weight:600;"{% endif %}>admin</a>
+      <a href="/admin/audit?actor_type=app" {% if actor_filter == "app" %}style="font-weight:600;"{% endif %}>apps</a>
+      <a href="/admin/audit?actor_type=anon" {% if actor_filter == "anon" %}style="font-weight:600;"{% endif %}>anónimos</a>
+    </div>
+    {% if entries %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha (UTC)</th><th>Actor</th><th>IP</th><th>Acción</th><th>Objetivo</th><th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in entries %}
+          <tr>
+            <td>{{ e.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+            <td>
+              <span class="badge {% if e.actor_type == 'admin' %}APPROVED{% elif e.actor_type == 'anon' %}DECLINED{% endif %}">{{ e.actor_type }}</span>
+              {{ e.actor or "—" }}
+            </td>
+            <td class="mono">{{ e.ip or "—" }}</td>
+            <td class="mono">{{ e.action }}</td>
+            <td>{{ e.target or "—" }}</td>
+            <td>{{ e.detail or "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="hint">Sin registros{% if actor_filter %} con este filtro{% endif %}.</p>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Transacciones — payments-service{% endblock %}
+{% block body %}
+<header>
+  <div style="display:flex; gap:24px; align-items:center;">
+    <h1>payments-service</h1>
+    <nav>
+      <a href="/admin">Configuración</a>
+      <a href="/admin/transactions" class="active">Transacciones</a>
+      <a href="/admin/audit">Auditoría</a>
+    </nav>
+  </div>
+  <div style="display:flex; gap:16px; align-items:center;">
+    <span style="color: var(--muted); font-size: 13px;">{{ username }}</span>
+    <form method="post" action="/admin/logout"><button class="link" type="submit">Salir</button></form>
+  </div>
+</header>
+<main>
+  <div class="card">
+    <h2>Resumen general</h2>
+    <div class="summary">
+      <div class="stat"><strong>{{ total }}</strong> transacciones</div>
+      {% for status in statuses %}
+      <div class="stat"><strong>{{ by_status[status] }}</strong> <span class="badge {{ status }}">{{ status }}</span></div>
+      {% endfor %}
+      {% for app in apps %}
+      <div class="stat">
+        <strong>{{ by_app[app]["approved_cents"] | cop }}</strong>
+        aprobado en {{ app }} ({{ by_app[app]["count"] }} tx)
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Transacciones ({{ txs|length }} mostradas)</h2>
+    <div class="filters">
+      <span style="color: var(--muted);">App:</span>
+      <a href="/admin/transactions{% if status_filter %}?status={{ status_filter }}{% endif %}"
+         {% if not app_filter %}style="font-weight:600;"{% endif %}>todas</a>
+      {% for app in apps %}
+      <a href="/admin/transactions?app={{ app }}{% if status_filter %}&amp;status={{ status_filter }}{% endif %}"
+         {% if app_filter == app %}style="font-weight:600;"{% endif %}>{{ app }}</a>
+      {% endfor %}
+      &nbsp;&nbsp;
+      <span style="color: var(--muted);">Estado:</span>
+      <a href="/admin/transactions{% if app_filter %}?app={{ app_filter }}{% endif %}"
+         {% if not status_filter %}style="font-weight:600;"{% endif %}>todos</a>
+      {% for status in statuses %}
+      <a href="/admin/transactions?status={{ status }}{% if app_filter %}&amp;app={{ app_filter }}{% endif %}"
+         {% if status_filter == status %}style="font-weight:600;"{% endif %}>{{ status }}</a>
+      {% endfor %}
+    </div>
+    {% if txs %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Actualizada (UTC)</th><th>Referencia</th><th>App</th><th>Estado</th>
+            <th>Monto</th><th>Método</th><th>Cliente</th><th>Ambiente</th><th>ID Wompi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in txs %}
+          <tr>
+            <td>{{ t.updated_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+            <td class="mono">{{ t.reference or "—" }}</td>
+            <td>{{ t.app }}</td>
+            <td><span class="badge {{ t.status }}">{{ t.status or "—" }}</span></td>
+            <td>{{ t.amount_in_cents | cop }} {{ t.currency if t.amount_in_cents is not none else "" }}</td>
+            <td>{{ t.payment_method or "—" }}</td>
+            <td>{{ t.customer_email or "—" }}</td>
+            <td>{{ t.environment or "—" }}</td>
+            <td class="mono">{{ t.wompi_id }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="hint">No hay transacciones{% if app_filter or status_filter %} con este filtro{% endif %}.</p>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}
